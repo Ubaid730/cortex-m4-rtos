@@ -2,28 +2,30 @@ CROSS = arm-none-eabi-
 CC = $(CROSS)gcc
 LD = $(CROSS)gcc
 
-CFLAGS = -mcpu=cortex-m4 -mthumb -fno-builtin -nostdlib -g -O0 -I. 
+CFLAGS = -mcpu=cortex-m4 -mthumb -fno-builtin -nostdlib -g -O0 -Iinclude
 LDFLAGS = -T linker.ld -Wl,--gc-sections
 
 TARGET = rtos-day1
-SRCS = startup.S main.c task.c mutex.c queue.c
-OBJS = $(SRCS:.c=.o)
+OBJS = build/startup.o build/main.o build/task.o build/mutex.o build/queue.o
 
-all: $(TARGET).elf
+all: build/$(TARGET).elf
 
-%.o: %.c
+build:
+	mkdir -p build
+
+build/%.o: src/%.c | build
 	$(CC) $(CFLAGS) -c $< -o $@
 
-%.o: %.S
+build/%.o: src/%.S | build
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(TARGET).elf: $(OBJS)
+build/$(TARGET).elf: $(OBJS)
 	$(LD) $(LDFLAGS) $(OBJS) -o $@
 
-run: $(TARGET).elf
-	renode script.resc
+run: build/$(TARGET).elf
+	renode sim/script.resc
 
 clean:
-	rm -f *.o *.elf
+	rm -rf build
 
 .PHONY: all run clean
